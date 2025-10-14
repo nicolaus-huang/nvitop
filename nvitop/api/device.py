@@ -115,7 +115,7 @@ import textwrap
 import threading
 import time
 from collections import OrderedDict
-from typing import TYPE_CHECKING, Any, ClassVar, Literal, NamedTuple, overload
+from typing import TYPE_CHECKING, Any, ClassVar, Dict, Literal, NamedTuple, overload
 
 from nvitop.api import libcuda, libcudart, libnvml
 from nvitop.api.process import GpuProcess
@@ -2245,6 +2245,34 @@ class Device:  # pylint: disable=too-many-instance-attributes,too-many-public-me
             return [self]  # type: ignore[return-value]
         return self.mig_devices()
 
+    def is_process_in_container(self) -> bool:
+        """Test whether the process is in container. All the containers created by pouch has environment variable pouch_container_id."""
+        return 'pouch_container_id' in os.environ
+    
+    def create_kernel_pid_map(self) -> Dict[int, int]:
+        """get kernel pid map, key: host pid, val: container pid from /proc/pid/task/pid/sched"""
+        pid_map = {}
+        proc_dir = "/proc"
+        
+        sched_pid_pattern = re.compile(r'\((\d+),')
+        for pid_str in os.listdir(proc_dir):
+            if pid_str.isdigit():
+                task_dir_path = os.path.join(proc_dir, pid_str, "task")
+                sched_file_path = os.path.join(task_dir_path, pid_str, "sched")
+                try:
+                    with open(sched_file_path, 'r') as f:
+                        first_line = f.readline()
+                        match = sched_pid_pattern.search(first_line)
+                        if match:
+                            host_pid = int(match.group(1))
+                            container_pid = int(pid_str)
+                            pid_map[host_pid] = container_pid
+                except (FileNotFoundError, PermissionError):
+                    continue
+                except Exception as e:
+                    print(f"Warning: Coundl process file {sched_file_path}: {e}")
+        return pid_map       
+
     def processes(self) -> dict[int, GpuProcess]:
         """Return a dictionary of processes running on the GPU.
 
@@ -2255,6 +2283,13 @@ class Device:  # pylint: disable=too-many-instance-attributes,too-many-public-me
             return {}
 
         processes = {}
+        
+        # judge whether the process is in container
+        process_in_container = self.is_process_in_container()
+        pid_map = {}
+        proc_dir = "/proc"
+        if process_in_container:
+            pid_map = self.create_kernel_pid_map()
         found_na = False
         for type, func in (  # pylint: disable=redefined-builtin
             ('C', 'nvmlDeviceGetComputeRunningProcesses'),
@@ -2268,8 +2303,14 @@ class Device:  # pylint: disable=too-many-instance-attributes,too-many-public-me
                     # or on MIG-enabled GPUs
                     gpu_memory = NA  # type: ignore[assignment]
                     found_na = True
+                new_pid = p.pid
+                if process_in_container:
+                    if p.pid in pid_map:
+                        new_pid = pid_map[p.pid]
+                    else:
+                        continue
                 proc = processes[p.pid] = self.GPU_PROCESS_CLASS(
-                    pid=p.pid,
+                    pid=new_pid,
                     device=self,
                     gpu_memory=gpu_memory,
                     gpu_instance_id=getattr(p, 'gpuInstanceId', UINT_MAX),
