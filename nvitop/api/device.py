@@ -2245,26 +2245,25 @@ class Device:  # pylint: disable=too-many-instance-attributes,too-many-public-me
             return [self]  # type: ignore[return-value]
         return self.mig_devices()
 
-
-def is_process_in_container(self) -> bool:
-        
+    
+    def is_process_in_container(self) -> bool:
         if 'pouch_container_id' in os.environ:
             return True
-
+    
         if os.path.exists('/.dockerenv'):
             return True
-
+    
         cgroup_path = '/proc/self/cgroup'
         if not os.path.exists(cgroup_path):
             return False
-
+    
         try:
             with open(cgroup_path, 'r') as f:
                 content = f.read()
-
+    
             if re.search(r'(docker|kubepods|crio|containerd|lxc|podman)', content):
                 return True
-
+    
             lines = content.strip().split('\n')
             if not lines:
                 return False
@@ -2272,7 +2271,7 @@ def is_process_in_container(self) -> bool:
             cgroup_v1_root_pattern = re.compile(r'^\d+:[^:]*:/$')
             cgroup_v1_systemd_pattern = re.compile(r'^\d+:[^:]*:/init\.scope$')
             cgroup_v2_root_pattern = re.compile(r'^0::/$')
-
+    
             is_in_root_cgroup = True
             for line in lines:
                 line = line.strip()
@@ -2286,10 +2285,10 @@ def is_process_in_container(self) -> bool:
             
             if not is_in_root_cgroup:
                 return True
-
+    
         except (IOError, FileNotFoundError, PermissionError) as e:
             pass
-
+    
         return False
     
     def create_kernel_pid_map(self) -> Dict[int, int]:
