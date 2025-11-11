@@ -2244,12 +2244,9 @@ class Device:  # pylint: disable=too-many-instance-attributes,too-many-public-me
         if isinstance(self, CudaDevice) or self.is_leaf_device():
             return [self]  # type: ignore[return-value]
         return self.mig_devices()
+
+
 def is_process_in_container(self) -> bool:
-        """
-        通过检查 cgroup 和其他常见标志，更稳定地测试进程是否在容器环境中运行。
-        
-        此方法可以处理 cgroup v1 和 cgroup v2 两种格式。
-        """
         
         if 'pouch_container_id' in os.environ:
             return True
