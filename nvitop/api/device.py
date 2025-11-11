@@ -2244,10 +2244,56 @@ class Device:  # pylint: disable=too-many-instance-attributes,too-many-public-me
         if isinstance(self, CudaDevice) or self.is_leaf_device():
             return [self]  # type: ignore[return-value]
         return self.mig_devices()
+def is_process_in_container(self) -> bool:
+        """
+        通过检查 cgroup 和其他常见标志，更稳定地测试进程是否在容器环境中运行。
+        
+        此方法可以处理 cgroup v1 和 cgroup v2 两种格式。
+        """
+        
+        if 'pouch_container_id' in os.environ:
+            return True
 
-    def is_process_in_container(self) -> bool:
-        """Test whether the process is in container. All the containers created by pouch has environment variable pouch_container_id."""
-        return 'pouch_container_id' in os.environ
+        if os.path.exists('/.dockerenv'):
+            return True
+
+        cgroup_path = '/proc/self/cgroup'
+        if not os.path.exists(cgroup_path):
+            return False
+
+        try:
+            with open(cgroup_path, 'r') as f:
+                content = f.read()
+
+            if re.search(r'(docker|kubepods|crio|containerd|lxc|podman)', content):
+                return True
+
+            lines = content.strip().split('\n')
+            if not lines:
+                return False
+                
+            cgroup_v1_root_pattern = re.compile(r'^\d+:[^:]*:/$')
+            cgroup_v1_systemd_pattern = re.compile(r'^\d+:[^:]*:/init\.scope$')
+            cgroup_v2_root_pattern = re.compile(r'^0::/$')
+
+            is_in_root_cgroup = True
+            for line in lines:
+                line = line.strip()
+                if (
+                    not cgroup_v1_root_pattern.match(line) and
+                    not cgroup_v1_systemd_pattern.match(line) and
+                    not cgroup_v2_root_pattern.match(line)
+                ):
+                    is_in_root_cgroup = False
+                    break
+            
+            if not is_in_root_cgroup:
+                return True
+
+        except (IOError, FileNotFoundError, PermissionError) as e:
+            pass
+
+        return False
     
     def create_kernel_pid_map(self) -> Dict[int, int]:
         """get kernel pid map, key: host pid, val: container pid from /proc/pid/task/pid/sched"""
