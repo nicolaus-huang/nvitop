@@ -2247,49 +2247,8 @@ class Device:  # pylint: disable=too-many-instance-attributes,too-many-public-me
 
     
     def is_process_in_container(self) -> bool:
-        if 'pouch_container_id' in os.environ:
-            return True
     
-        if os.path.exists('/.dockerenv'):
-            return True
-    
-        cgroup_path = '/proc/self/cgroup'
-        if not os.path.exists(cgroup_path):
-            return False
-    
-        try:
-            with open(cgroup_path, 'r') as f:
-                content = f.read()
-    
-            if re.search(r'(docker|kubepods|crio|containerd|lxc|podman)', content):
-                return True
-    
-            lines = content.strip().split('\n')
-            if not lines:
-                return False
-                
-            cgroup_v1_root_pattern = re.compile(r'^\d+:[^:]*:/$')
-            cgroup_v1_systemd_pattern = re.compile(r'^\d+:[^:]*:/init\.scope$')
-            cgroup_v2_root_pattern = re.compile(r'^0::/$')
-    
-            is_in_root_cgroup = True
-            for line in lines:
-                line = line.strip()
-                if (
-                    not cgroup_v1_root_pattern.match(line) and
-                    not cgroup_v1_systemd_pattern.match(line) and
-                    not cgroup_v2_root_pattern.match(line)
-                ):
-                    is_in_root_cgroup = False
-                    break
-            
-            if not is_in_root_cgroup:
-                return True
-    
-        except (IOError, FileNotFoundError, PermissionError) as e:
-            pass
-    
-        return False
+        return True
     
     def create_kernel_pid_map(self) -> Dict[int, int]:
         """get kernel pid map, key: host pid, val: container pid from /proc/pid/task/pid/sched"""
@@ -2326,12 +2285,12 @@ class Device:  # pylint: disable=too-many-instance-attributes,too-many-public-me
 
         processes = {}
         
-        # judge whether the process is in container
-        process_in_container = self.is_process_in_container()
         pid_map = {}
         proc_dir = "/proc"
-        if process_in_container:
+        try:
             pid_map = self.create_kernel_pid_map()
+        except:
+            pass
         found_na = False
         for type, func in (  # pylint: disable=redefined-builtin
             ('C', 'nvmlDeviceGetComputeRunningProcesses'),
@@ -2346,11 +2305,8 @@ class Device:  # pylint: disable=too-many-instance-attributes,too-many-public-me
                     gpu_memory = NA  # type: ignore[assignment]
                     found_na = True
                 new_pid = p.pid
-                if process_in_container:
-                    if p.pid in pid_map:
-                        new_pid = pid_map[p.pid]
-                    else:
-                        continue
+                if p.pid in pid_map:
+                    new_pid = pid_map[p.pid]
                 proc = processes[p.pid] = self.GPU_PROCESS_CLASS(
                     pid=new_pid,
                     device=self,
