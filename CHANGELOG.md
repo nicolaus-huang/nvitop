@@ -13,7 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
--
+- Add `nvidia-ml-py` 13.595.45 to support list.
 
 ### Changed
 
@@ -26,6 +26,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 
 -
+
+------
+
+## [1.6.2] - 2026-01-28
+
+### Added
+
+- Add `nvidia-ml-py` 13.580.126 and 13.590.44 and 13.590.48 to support list by [@XuehaiPan](https://github.com/XuehaiPan).
+
+### Fixed
+
+- Fix TUI column alignment for device with power limit >= 1000W by [@XuehaiPan](https://github.com/XuehaiPan).
+- Fix grammar and typos in documentation by [@XuehaiPan](https://github.com/XuehaiPan).
 
 ------
 
@@ -246,7 +259,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ------
 
-[Unreleased]: https://github.com/XuehaiPan/nvitop/compare/v1.6.1...HEAD
+[Unreleased]: https://github.com/XuehaiPan/nvitop/compare/v1.6.2...HEAD
+[1.6.2]: https://github.com/XuehaiPan/nvitop/compare/v1.6.1...v1.6.2
 [1.6.1]: https://github.com/XuehaiPan/nvitop/compare/v1.6.0...v1.6.1
 [1.6.0]: https://github.com/XuehaiPan/nvitop/compare/v1.5.3...v1.6.0
 [1.5.3]: https://github.com/XuehaiPan/nvitop/compare/v1.5.2...v1.5.3

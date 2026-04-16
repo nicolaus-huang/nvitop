@@ -28,7 +28,7 @@ An interactive NVIDIA-GPU process viewer and beyond, the one-stop solution for G
 .. |Documentation Status| image:: https://img.shields.io/readthedocs/nvitop?label=docs&logo=readthedocs
 .. _Documentation Status: https://nvitop.readthedocs.io
 
-.. |Downloads| image:: https://static.pepy.tech/personalized-badge/nvitop?period=total&left_color=grey&right_color=blue&left_text=downloads
+.. |Downloads| image:: https://static.pepy.tech/personalized-badge/nvitop?period=total&left_color=gray&right_color=blue&left_text=downloads
 .. _Downloads: https://pepy.tech/project/nvitop
 
 .. |GitHub Repo Stars| image:: https://img.shields.io/github/stars/XuehaiPan/nvitop?label=stars&logo=github&color=brightgreen
@@ -58,7 +58,7 @@ Install from PyPI (|PyPI Package|_):
 
 .. note::
 
-    Python 3.8+ is required, and Python versions lower than 3.8 is not supported.
+    Python 3.8+ is required, and Python versions lower than 3.8 are not supported.
 
 Install from conda-forge (|Conda-forge Package|_):
 
@@ -82,7 +82,7 @@ Or, clone this repo and install manually:
 
 If this repo is useful to you, please star ⭐️ it to let more people know 🤗. |GitHub Repo Stars|_
 
-.. |Commit Count| image:: https://img.shields.io/github/commits-since/XuehaiPan/nvitop/v1.6.1
+.. |Commit Count| image:: https://img.shields.io/github/commits-since/XuehaiPan/nvitop/v1.6.2
 
 ------
 

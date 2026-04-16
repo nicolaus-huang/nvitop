@@ -18,29 +18,31 @@
 
 # pylint: disable=invalid-name
 
-__version__ = '1.6.1'
+__version__ = '1.6.2'
 __license__ = 'Apache-2.0 AND GPL-3.0-only'
 __author__ = __maintainer__ = 'Xuehai Pan'
 __email__ = 'XuehaiPan@pku.edu.cn'
 __release__ = False
 
 if not __release__:
-    import os
     import subprocess
+    from pathlib import Path
 
-    root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    root_dir = Path(__file__).absolute().parent.parent
     try:
         prefix, sep, suffix = (
             subprocess.check_output(  # noqa: S603
                 [  # noqa: S607
                     'git',
-                    f'--git-dir={os.path.join(root_dir, ".git")}',
+                    f'--git-dir={root_dir / ".git"}',
                     'describe',
                     '--abbrev=7',
                 ],
                 cwd=root_dir,
                 stderr=subprocess.DEVNULL,
                 text=True,
+                encoding='utf-8',
+                timeout=120.0,
             )
             .strip()
             .lstrip('v')
@@ -56,10 +58,10 @@ if not __release__:
         else:
             __version__ = prefix
         del prefix, sep, suffix
-    except (OSError, subprocess.CalledProcessError):
+    except (OSError, RuntimeError, subprocess.SubprocessError):
         pass
 
-    del os, subprocess, root_dir
+    del Path, subprocess, root_dir
 
 
 # The package `nvidia-ml-py` is not backward compatible over releases. This may
@@ -92,7 +94,10 @@ PYNVML_VERSION_CANDIDATES = (
     '12.575.51',
     '13.580.65',
     '13.580.82',
+    '13.580.126',
     '13.590.44',
+    '13.590.48',
+    '13.595.45',
 )
 """The list of supported ``nvidia-ml-py`` versions.
 See also: `nvidia-ml-py's Release History <https://pypi.org/project/nvidia-ml-py/#history>`_.
